@@ -1,0 +1,16 @@
+# Wrangler local state (D1 local DB, cache, tmp files)
+.wrangler/
+
+# Node
+node_modules/
+package-lock.json
+package.json
+
+# Environment / secrets
+.env
+.env.*
+.dev.vars
+
+# OS
+.DS_Store
+Thumbs.db

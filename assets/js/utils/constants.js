@@ -47,4 +47,4 @@ export const REPORT_STATUS_COLORS = {
   resolved:      'success',
 };
 
-export const API_BASE = '/api';
+export const API_BASE = 'https://school-schedule-api.banyoloper.workers.dev/api';
