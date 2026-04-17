@@ -15,7 +15,7 @@ export async function loadCoordinators(containerId) {
   el.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <h2 style="font-size:16px">Coordinadores</h2>
-      <button class="btn btn-primary" id="btn-new-coordinator">+ Nuevo</button>
+      <button class="btn btn-primary" id="btn-new-coordinator" data-shortcut="alt+n">+ Nuevo<span class="btn-shortcut">Alt+N</span></button>
     </div>
     <table class="data-table">
       <thead><tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Carreras</th><th></th></tr></thead>

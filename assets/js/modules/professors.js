@@ -1,8 +1,7 @@
 import { api } from '../core/api.js';
-import { getUser } from '../core/auth.js';
 
 export const professorsApi = {
-  list:   (careerId) => api.get(`/professors?career_id=${careerId}`),
+  list:   (careerId) => careerId ? api.get(`/professors?career_id=${careerId}`) : api.get('/professors'),
   get:    (id)       => api.get(`/professors/${id}`),
   create: (data)     => api.post('/professors', data),
   update: (id, data) => api.put(`/professors/${id}`, data),
@@ -23,12 +22,11 @@ export function renderProfessorRow(prof) {
 
 export async function initProfessorsPage() {
   const tbody = document.getElementById('professors-tbody');
-  const user  = getUser();
 
   async function load() {
     tbody.innerHTML = '<tr><td colspan="2">Cargando...</td></tr>';
     try {
-      const profs = await professorsApi.list(user.career_id);
+      const profs = await professorsApi.list();
       tbody.innerHTML = profs.map(renderProfessorRow).join('') || '<tr><td colspan="2">Sin profesores.</td></tr>';
     } catch (e) {
       tbody.innerHTML = `<tr><td colspan="2" class="text-danger">${e.message}</td></tr>`;

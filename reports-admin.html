@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reportes de Fallas — School Schedule</title>
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  <link rel="stylesheet" href="/assets/css/components.css" />
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo">📅 School Schedule</div>
+    <nav class="sidebar-nav"></nav>
+    <div class="sidebar-user" id="user-info">Cargando...</div>
+  </aside>
+
+  <main class="main-content">
+    <div class="page-header">
+      <h1>Reportes de Fallas</h1>
+    </div>
+
+    <div class="tabs" style="margin-bottom:24px">
+      <button class="tab-btn active" data-tab="pending">Pendientes</button>
+      <button class="tab-btn" data-tab="history">Historial completo</button>
+      <button class="tab-btn" data-tab="stats">Estadísticas</button>
+    </div>
+
+    <div id="tab-pending"  class="tab-panel"><p style="color:var(--color-muted)">Cargando…</p></div>
+    <div id="tab-history"  class="tab-panel" hidden></div>
+    <div id="tab-stats"    class="tab-panel" hidden></div>
+  </main>
+</div>
+
+<script type="module">
+  import { initSidebar }          from '/assets/js/components/sidebar.js';
+  import { initReportsAdminPage } from '/assets/js/modules/reports-admin.js';
+  await initSidebar('/reports-admin.html');
+  initReportsAdminPage();
+</script>
+</body>
+</html>

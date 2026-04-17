@@ -35,16 +35,23 @@ export const NEGOTIATION_STATUS = {
   rejected: 'Rechazado',
 };
 
+export const REPORTER_LABELS = { teacher: 'Profesor', student: 'Alumno' };
+
 export const REPORT_STATUS = {
-  open:        'Abierto',
-  'in-progress': 'En proceso',
-  resolved:    'Resuelto',
+  pending:       'Pendiente',
+  fixed:         'Arreglado',
+  'false-alarm': 'Falsa alarma',
+  duplicate:     'Duplicado',
 };
 
 export const REPORT_STATUS_COLORS = {
-  open:          'danger',
-  'in-progress': 'warning',
-  resolved:      'success',
+  pending:       'warning',
+  fixed:         'success',
+  'false-alarm': 'secondary',
+  duplicate:     'info',
 };
 
-export const API_BASE = 'https://school-schedule-api.banyoloper.workers.dev/api';
+const LOCAL = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+export const API_BASE = LOCAL
+  ? 'http://localhost:8787/api'
+  : 'https://school-schedule-api.banyoloper.workers.dev/api';

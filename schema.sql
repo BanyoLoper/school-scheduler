@@ -97,6 +97,14 @@ CREATE TABLE IF NOT EXISTS professors (
   FOREIGN KEY (career_id) REFERENCES careers(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS professor_subjects (
+  professor_id INTEGER NOT NULL,
+  subject_id   INTEGER NOT NULL,
+  PRIMARY KEY (professor_id, subject_id),
+  FOREIGN KEY (professor_id) REFERENCES professors(id) ON DELETE CASCADE,
+  FOREIGN KEY (subject_id)   REFERENCES subjects(id)   ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS availability (
   id           INTEGER PRIMARY KEY AUTOINCREMENT,
   professor_id INTEGER NOT NULL,
@@ -142,7 +150,7 @@ CREATE TABLE IF NOT EXISTS computer_reports (
   reported_by  TEXT    NOT NULL CHECK(reported_by IN ('teacher','student')),
   description  TEXT    NOT NULL,
   photo_url    TEXT,
-  status       TEXT    NOT NULL DEFAULT 'open' CHECK(status IN ('open','in-progress','resolved')),
+  status       TEXT    NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','fixed','false-alarm','duplicate')),
   created_at   TEXT    NOT NULL DEFAULT (datetime('now')),
   resolved_at  TEXT,
   FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE

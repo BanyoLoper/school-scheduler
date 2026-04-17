@@ -18,7 +18,7 @@ export function showModal({ title, body, confirmText = 'Confirmar', cancelText =
       </div>`;
 
     document.body.appendChild(modal);
-    modal.querySelector('#modal-confirm').focus();
+    (modal.querySelector('input:not([type=hidden]), select') ?? modal.querySelector('#modal-confirm'))?.focus();
 
     const close = (result) => { modal.remove(); resolve(result); };
     modal.querySelector('#modal-confirm').addEventListener('click', () => close(true));
@@ -54,10 +54,14 @@ export function showFormModal({ title, fields, data = {}, onSave }) {
         </div>
       </div>`;
     document.body.appendChild(modal);
+    modal.querySelector('input[type="text"], input:not([type])')?.focus();
 
     const close = () => { modal.remove(); resolve(null); };
     modal.querySelector('#modal-cancel').addEventListener('click', close);
     modal.addEventListener('click', e => { if (e.target === modal) close(); });
+    document.addEventListener('keydown', function esc(e) {
+      if (e.key === 'Escape') { close(); document.removeEventListener('keydown', esc); }
+    }, { once: true });
 
     modal.querySelector('#modal-form').addEventListener('submit', async e => {
       e.preventDefault();
@@ -90,19 +94,26 @@ export async function openRoomModal(room, onDone) {
 
 export async function openSubjectModal(subject, onDone) {
   const { subjectsApi } = await import('../modules/subjects.js');
-  const { getUser }     = await import('../core/auth.js');
-  const user = getUser();
+  const { getProfile }  = await import('../core/profile.js');
+  const { api }         = await import('../core/api.js');
+  const [profile, careers] = await Promise.all([getProfile(), api.get('/careers')]);
+
+  const allowedCareers = profile.role === 'admin'
+    ? careers
+    : careers.filter(c => profile.career_ids.includes(c.id));
+
   await showFormModal({
     title: subject ? 'Editar Materia' : 'Nueva Materia',
     data: subject ?? {},
     fields: [
       { name: 'name',      label: 'Nombre',   required: true },
+      { name: 'career_id', label: 'Carrera',  type: 'select', required: true,
+        options: allowedCareers.map(c => ({ value: c.id, label: c.name })) },
       { name: 'semester',  label: 'Semestre', type: 'number', required: true },
       { name: 'needs_lab', label: 'Requiere laboratorio', type: 'select',
         options: [{ value: '0', label: 'No' }, { value: '1', label: 'Sí' }] },
     ],
     onSave: async (data) => {
-      data.career_id = user.career_id;
       subject ? await subjectsApi.update(subject.id, data) : await subjectsApi.create(data);
       onDone?.();
     },
@@ -111,16 +122,97 @@ export async function openSubjectModal(subject, onDone) {
 
 export async function openProfessorModal(prof, onDone) {
   const { professorsApi } = await import('../modules/professors.js');
-  const { getUser }       = await import('../core/auth.js');
-  const user = getUser();
+  const { getProfile }    = await import('../core/profile.js');
+  const { api }           = await import('../core/api.js');
+  const [profile, careers] = await Promise.all([getProfile(), api.get('/careers')]);
+
+  const allowedCareers = profile.role === 'admin'
+    ? careers
+    : careers.filter(c => profile.career_ids.includes(c.id));
+
   await showFormModal({
     title: prof ? 'Editar Profesor' : 'Nuevo Profesor',
     data: prof ?? {},
-    fields: [{ name: 'name', label: 'Nombre', required: true }],
+    fields: [
+      { name: 'name',      label: 'Nombre',  required: true },
+      { name: 'career_id', label: 'Carrera', type: 'select', required: true,
+        options: allowedCareers.map(c => ({ value: c.id, label: c.name })) },
+    ],
     onSave: async (data) => {
-      data.career_id = user.career_id;
       prof ? await professorsApi.update(prof.id, data) : await professorsApi.create(data);
       onDone?.();
     },
+  });
+}
+
+export async function openGroupsModal(subject) {
+  const { subjectsApi } = await import('../modules/subjects.js');
+
+  async function renderGroups(container) {
+    const groups = await subjectsApi.listGroups(subject.id);
+    container.innerHTML = groups.length ? `
+      <table class="data-table" style="margin-bottom:12px">
+        <thead><tr><th>Grupo</th><th>Alumnos</th><th>Prioritario</th><th></th></tr></thead>
+        <tbody>
+          ${groups.map(g => `
+            <tr>
+              <td>Grupo ${g.group_number}</td>
+              <td>${g.students}</td>
+              <td>${g.is_priority ? '<span class="badge badge-warning">Sí</span>' : '—'}</td>
+              <td style="text-align:right">
+                <button class="btn btn-sm btn-danger" data-del="${g.id}">Eliminar</button>
+              </td>
+            </tr>`).join('')}
+        </tbody>
+      </table>` : '<p style="color:var(--color-muted);margin-bottom:12px">Sin grupos registrados.</p>';
+
+    container.querySelectorAll('[data-del]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('¿Eliminar grupo?')) return;
+        await subjectsApi.removeGroup(btn.dataset.del);
+        renderGroups(container);
+      });
+    });
+  }
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-box" style="max-width:520px">
+      <h2>Grupos — ${subject.name}</h2>
+      <div class="modal-body">
+        <div id="groups-list">Cargando...</div>
+        <details style="margin-top:8px">
+          <summary style="cursor:pointer;font-weight:500;font-size:13px;color:var(--color-primary)">+ Agregar grupo</summary>
+          <div style="display:flex;gap:8px;align-items:flex-end;margin-top:10px;flex-wrap:wrap">
+            <label style="flex:1;min-width:80px">Número<input id="g-num" class="input" type="number" min="1" value="1"/></label>
+            <label style="flex:1;min-width:80px">Alumnos<input id="g-students" class="input" type="number" min="1" value="30"/></label>
+            <label style="display:flex;align-items:center;gap:6px;font-weight:normal;margin-bottom:4px">
+              <input id="g-priority" type="checkbox"/> Prioritario
+            </label>
+            <button class="btn btn-primary btn-sm" id="g-save" style="margin-bottom:4px">Guardar</button>
+          </div>
+        </details>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="g-close">Cerrar</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(modal);
+  const listEl = modal.querySelector('#groups-list');
+  await renderGroups(listEl);
+
+  modal.querySelector('#g-close').addEventListener('click', () => modal.remove());
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+
+  modal.querySelector('#g-save').addEventListener('click', async () => {
+    const group_number = Number(modal.querySelector('#g-num').value);
+    const students     = Number(modal.querySelector('#g-students').value);
+    const is_priority  = modal.querySelector('#g-priority').checked ? 1 : 0;
+    if (!group_number || !students) return;
+    await subjectsApi.createGroup({ subject_id: subject.id, group_number, students, is_priority });
+    modal.querySelector('#g-num').value = group_number + 1;
+    renderGroups(listEl);
   });
 }

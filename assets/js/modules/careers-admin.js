@@ -8,7 +8,7 @@ export async function loadCareers(containerId) {
   el.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <h2 style="font-size:16px">Carreras</h2>
-      <button class="btn btn-primary" id="btn-new-career">+ Nueva carrera</button>
+      <button class="btn btn-primary" id="btn-new-career" data-shortcut="alt+n">+ Nueva carrera<span class="btn-shortcut">Alt+N</span></button>
     </div>
     <table class="data-table">
       <thead><tr><th>Código</th><th>Nombre</th><th>Semestres</th><th></th></tr></thead>
@@ -70,8 +70,15 @@ function openCareerModal(career, onSave) {
     </div>`;
 
   document.body.appendChild(modal);
-  modal.querySelector('.modal-close').onclick = () => modal.remove();
-  document.getElementById('m-cancel').onclick = () => modal.remove();
+  document.getElementById('m-career-name').focus();
+
+  const closeModal = () => modal.remove();
+  modal.querySelector('.modal-close').onclick = closeModal;
+  document.getElementById('m-cancel').onclick = closeModal;
+  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+  document.addEventListener('keydown', function esc(e) {
+    if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', esc); }
+  }, { once: true });
 
   document.getElementById('m-save').onclick = async () => {
     const name            = document.getElementById('m-career-name').value.trim();
