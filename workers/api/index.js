@@ -20,13 +20,16 @@ function withCors(response, origin) {
   const h = new Headers(response.headers);
   h.set('Access-Control-Allow-Origin', origin);
   h.set('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-  h.set('Access-Control-Allow-Headers', 'Content-Type');
+  h.set('Access-Control-Allow-Headers', 'Content-Type,CF-Access-Token');
   h.set('Access-Control-Allow-Credentials', 'true');
   return new Response(response.body, { status: response.status, headers: h });
 }
 
 function parseJwt(request) {
-  const jwt = request.headers.get('Cf-Access-Jwt-Assertion');
+  // Server-to-server: Cloudflare injects this header automatically
+  let jwt = request.headers.get('Cf-Access-Jwt-Assertion');
+  // Browser: frontend reads CF_Authorization cookie and sends it as this header
+  if (!jwt) jwt = request.headers.get('CF-Access-Token');
   if (!jwt) return null;
   try {
     const payload = JSON.parse(atob(jwt.split('.')[1]));
