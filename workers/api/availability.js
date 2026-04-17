@@ -9,14 +9,26 @@ export async function handleAvailability(request, { env, user, json, url }) {
     if (!name?.trim() || !Array.isArray(slots) || !Array.isArray(subject_ids))
       return json({ error: 'name, slots y subject_ids son requeridos' }, 400);
 
+    // Derive career_id from the first subject provided
+    let careerId = null;
+    if (subject_ids.length > 0) {
+      const subj = await DB.prepare(
+        'SELECT career_id FROM subjects WHERE id = ?'
+      ).bind(subject_ids[0]).first();
+      careerId = subj?.career_id ?? null;
+    }
+
     let professor = await DB.prepare(
-      'SELECT id FROM professors WHERE LOWER(name) = LOWER(?)'
+      'SELECT id, career_id FROM professors WHERE LOWER(name) = LOWER(?)'
     ).bind(name.trim()).first();
 
     if (!professor) {
       professor = await DB.prepare(
-        'INSERT INTO professors (name) VALUES (?) RETURNING id'
-      ).bind(name.trim()).first();
+        'INSERT INTO professors (name, career_id) VALUES (?, ?) RETURNING id'
+      ).bind(name.trim(), careerId).first();
+    } else if (careerId && !professor.career_id) {
+      await DB.prepare('UPDATE professors SET career_id = ? WHERE id = ?')
+        .bind(careerId, professor.id).run();
     }
 
     const pid = professor.id;

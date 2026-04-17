@@ -86,19 +86,23 @@ export default {
     const ctx = { env, user, json, url };
 
     let response;
-    if      (path === '/api/me')                      response = await handleMe(request, ctx);
-    else if (path.startsWith('/api/careers'))         response = await handleCareers(request, ctx);
-    else if (path.startsWith('/api/coordinators'))    response = await handleCoordinators(request, ctx);
-    else if (path.startsWith('/api/rooms'))           response = await handleRooms(request, ctx);
-    else if (path.startsWith('/api/subjects') ||
-             path.startsWith('/api/groups'))          response = await handleSubjects(request, ctx);
-    else if (path.startsWith('/api/professors'))      response = await handleProfessors(request, ctx);
-    else if (path.startsWith('/api/availability'))    response = await handleAvailability(request, ctx);
-    else if (path.startsWith('/api/schedule'))        response = await handleSchedule(request, ctx);
-    else if (path.startsWith('/api/negotiations'))    response = await handleNegotiations(request, ctx);
-    else if (path.startsWith('/api/lab-inventory'))   response = await handleLabInventory(request, ctx);
-    else if (path.startsWith('/api/reports'))         response = await handleReports(request, ctx);
-    else response = json({ error: 'Not found' }, 404);
+    try {
+      if      (path === '/api/me')                      response = await handleMe(request, ctx);
+      else if (path.startsWith('/api/careers'))         response = await handleCareers(request, ctx);
+      else if (path.startsWith('/api/coordinators'))    response = await handleCoordinators(request, ctx);
+      else if (path.startsWith('/api/rooms'))           response = await handleRooms(request, ctx);
+      else if (path.startsWith('/api/subjects') ||
+               path.startsWith('/api/groups'))          response = await handleSubjects(request, ctx);
+      else if (path.startsWith('/api/professors'))      response = await handleProfessors(request, ctx);
+      else if (path.startsWith('/api/availability'))    response = await handleAvailability(request, ctx);
+      else if (path.startsWith('/api/schedule'))        response = await handleSchedule(request, ctx);
+      else if (path.startsWith('/api/negotiations'))    response = await handleNegotiations(request, ctx);
+      else if (path.startsWith('/api/lab-inventory'))   response = await handleLabInventory(request, ctx);
+      else if (path.startsWith('/api/reports'))         response = await handleReports(request, ctx);
+      else response = json({ error: 'Not found' }, 404);
+    } catch (err) {
+      response = json({ error: err.message ?? 'Internal server error' }, 500);
+    }
 
     return withCors(response, origin);
   },

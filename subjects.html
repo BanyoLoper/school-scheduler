@@ -25,6 +25,9 @@
     </div>
 
     <div class="filters-bar">
+      <label>Carrera
+        <select id="filter-career"><option value="">Todas</option></select>
+      </label>
       <label>Semestre
         <select id="filter-semester">
           <option value="">Todos</option>
@@ -33,26 +36,23 @@
           <option>7</option><option>8</option><option>9</option>
         </select>
       </label>
+      <label>Tipo
+        <select id="filter-type">
+          <option value="">Todos</option>
+          <option value="0">Teórico</option>
+          <option value="1">Laboratorio</option>
+        </select>
+      </label>
     </div>
 
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Materia</th><th>Semestre</th><th>Tipo</th>
-            <th>Software requerido</th><th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="subjects-tbody">
-          <tr><td colspan="5">Cargando...</td></tr>
-        </tbody>
-      </table>
+    <div id="subjects-container">
+      <p style="color:var(--color-muted);padding:16px">Cargando...</p>
     </div>
   </main>
 </div>
 
 <script type="module">
-  import { initSidebar } from '/assets/js/components/sidebar.js';
+  import { initSidebar }     from '/assets/js/components/sidebar.js';
   import { initSubjectsPage } from '/assets/js/modules/subjects.js';
   await initSidebar('/subjects.html');
   initSubjectsPage();

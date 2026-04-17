@@ -83,18 +83,19 @@ CREATE TABLE IF NOT EXISTS subject_software_requirements (
 
 CREATE TABLE IF NOT EXISTS groups (
   id           INTEGER PRIMARY KEY AUTOINCREMENT,
-  subject_id   INTEGER NOT NULL,
+  career_id    INTEGER NOT NULL,
+  semester     INTEGER NOT NULL,
   group_number INTEGER NOT NULL,
   students     INTEGER NOT NULL,
   is_priority  INTEGER NOT NULL DEFAULT 0,
-  FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE
+  FOREIGN KEY (career_id) REFERENCES careers(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS professors (
   id        INTEGER PRIMARY KEY AUTOINCREMENT,
   name      TEXT    NOT NULL,
-  career_id INTEGER NOT NULL,
-  FOREIGN KEY (career_id) REFERENCES careers(id) ON DELETE CASCADE
+  career_id INTEGER,
+  FOREIGN KEY (career_id) REFERENCES careers(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS professor_subjects (
@@ -118,6 +119,7 @@ CREATE TABLE IF NOT EXISTS availability (
 CREATE TABLE IF NOT EXISTS assignments (
   id           INTEGER PRIMARY KEY AUTOINCREMENT,
   group_id     INTEGER NOT NULL,
+  subject_id   INTEGER NOT NULL,
   room_id      INTEGER NOT NULL,
   professor_id INTEGER,
   day          TEXT    NOT NULL CHECK(day IN ('monday','tuesday','wednesday','thursday','friday','saturday')),
@@ -125,6 +127,7 @@ CREATE TABLE IF NOT EXISTS assignments (
   end_time     TEXT    NOT NULL,
   is_confirmed INTEGER NOT NULL DEFAULT 0,
   FOREIGN KEY (group_id)     REFERENCES groups(id)     ON DELETE CASCADE,
+  FOREIGN KEY (subject_id)   REFERENCES subjects(id)   ON DELETE CASCADE,
   FOREIGN KEY (room_id)      REFERENCES rooms(id)      ON DELETE RESTRICT,
   FOREIGN KEY (professor_id) REFERENCES professors(id) ON DELETE SET NULL
 );
