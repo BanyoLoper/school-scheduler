@@ -1,9 +1,18 @@
 import { API_BASE } from '../utils/constants.js';
 
+function getCfToken() {
+  const cookie = document.cookie.split(';').find(c => c.trim().startsWith('CF_Authorization='));
+  return cookie ? cookie.trim().slice('CF_Authorization='.length) : null;
+}
+
 async function request(method, path, body) {
+  const token = getCfToken();
   const opts = {
     method,
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'CF-Access-Token': token } : {}),
+    },
     credentials: 'include',
   };
   if (body !== undefined) opts.body = JSON.stringify(body);
