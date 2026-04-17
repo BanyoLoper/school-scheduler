@@ -8,16 +8,21 @@ export async function handleSubjects(request, { env, user, json, url }) {
 
   if (isGroups) {
     if (method === 'GET') {
-      const subjectId = url.searchParams.get('subject_id');
-      if (!subjectId) return json({ error: 'subject_id required' }, 400);
-      const { results } = await DB.prepare('SELECT * FROM groups WHERE subject_id = ? ORDER BY group_number').bind(subjectId).all();
+      const careerId = url.searchParams.get('career_id');
+      const semester = url.searchParams.get('semester');
+      if (!careerId || !semester) return json({ error: 'career_id and semester required' }, 400);
+      const { results } = await DB.prepare(
+        'SELECT * FROM groups WHERE career_id = ? AND semester = ? ORDER BY group_number'
+      ).bind(careerId, semester).all();
       return json(results);
     }
     if (method === 'POST') {
-      const { subject_id, group_number, students, is_priority = 0 } = await request.json();
+      const { career_id, semester, group_number, students, is_priority = 0 } = await request.json();
+      if (!career_id || !semester || !group_number || !students)
+        return json({ error: 'career_id, semester, group_number, students required' }, 400);
       const row = await DB.prepare(
-        'INSERT INTO groups (subject_id, group_number, students, is_priority) VALUES (?, ?, ?, ?) RETURNING *'
-      ).bind(subject_id, group_number, students, is_priority).first();
+        'INSERT INTO groups (career_id, semester, group_number, students, is_priority) VALUES (?, ?, ?, ?, ?) RETURNING *'
+      ).bind(career_id, semester, group_number, students, is_priority).first();
       return json(row, 201);
     }
     if (method === 'PUT' && id) {

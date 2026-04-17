@@ -17,37 +17,60 @@
   </aside>
 
   <main class="main-content">
-    <div class="page-header">
+    <div class="page-header" style="margin-bottom:16px">
       <h1>Constructor de Horario</h1>
     </div>
 
-    <div class="schedule-toolbar">
-      <label>Semestre
-        <select id="filter-semester">
-          <option value="">Todos</option>
-          <option>1</option><option>2</option><option>3</option>
-          <option>4</option><option>5</option><option>6</option>
-        </select>
-      </label>
-      <button class="btn btn-primary" id="btn-generate">⚡ Generar propuesta</button>
-      <div class="schedule-legend">
-        <span><span class="legend-dot normal"></span>Normal</span>
-        <span><span class="legend-dot priority"></span>Prioritaria</span>
-        <span><span class="legend-dot warning"></span>Advertencia</span>
+    <div class="tabs" style="margin-bottom:20px">
+      <button class="tab-btn active" data-tab="editor">Constructor</button>
+      <button class="tab-btn" data-tab="proposals">Propuestas guardadas</button>
+    </div>
+
+    <!-- ── Editor tab ── -->
+    <div id="tab-editor" class="tab-panel">
+
+      <div id="readonly-banner" class="alert alert-info" hidden style="margin-bottom:12px;display:flex;align-items:center;gap:12px">
+        <span>Vista de solo lectura</span>
+        <button id="btn-exit-readonly" class="btn btn-sm btn-secondary">Volver a editar</button>
+      </div>
+
+      <div class="schedule-nav">
+        <div class="nav-group">
+          <button class="btn btn-sm btn-secondary" id="career-prev" title="Carrera anterior (↑)">↑</button>
+          <span class="nav-label" id="career-label">Cargando…</span>
+          <button class="btn btn-sm btn-secondary" id="career-next" title="Siguiente carrera (↓)">↓</button>
+        </div>
+        <div class="nav-group">
+          <button class="btn btn-sm btn-secondary" id="sem-prev" title="Semestre anterior (←)">←</button>
+          <span class="nav-label" id="sem-label">Semestre 1</span>
+          <button class="btn btn-sm btn-secondary" id="sem-next" title="Siguiente semestre (→)">→</button>
+        </div>
+        <div class="nav-hint">Usa ← → ↑ ↓ para navegar</div>
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+          <span id="save-notice" class="badge badge-success" hidden></span>
+          <button id="btn-save-proposal" class="btn btn-primary">Guardar propuesta</button>
+        </div>
+      </div>
+
+      <div style="overflow-x:auto;margin-top:16px">
+        <div id="schedule-grid"><p style="color:var(--color-muted)">Cargando…</p></div>
       </div>
     </div>
 
-    <div style="overflow-x:auto;">
-      <div id="schedule-grid"><p>Cargando horario...</p></div>
+    <!-- ── Proposals tab ── -->
+    <div id="tab-proposals" class="tab-panel" hidden>
+      <div id="proposals-list"><p style="color:var(--color-muted)">Cargando…</p></div>
     </div>
+
   </main>
 </div>
 
 <script type="module">
-  import { initSidebar } from '/assets/js/components/sidebar.js';
-  import { initSchedulePage } from '/assets/js/modules/schedule.js';
+  import { initSidebar }          from '/assets/js/components/sidebar.js';
+  import { initSchedulePage }     from '/assets/js/modules/schedule.js';
+  import { renderProposalsList }  from '/assets/js/modules/schedule-proposals.js';
   await initSidebar('/schedule.html');
-  initSchedulePage();
+  initSchedulePage({ onProposalsTab: renderProposalsList });
 </script>
 </body>
 </html>

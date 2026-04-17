@@ -24,10 +24,13 @@ function softwareMatch(roomSoftware, requirements) {
 
 export async function buildProposal(DB, careerId, semester) {
   const { results: groups } = await DB.prepare(`
-    SELECT g.*, s.name AS subject_name, s.needs_lab, s.semester
-    FROM groups g JOIN subjects s ON s.id = g.subject_id
-    WHERE s.career_id=? ${semester ? 'AND s.semester=?' : ''}
-    ORDER BY g.is_priority DESC, g.students DESC
+    SELECT g.id AS group_id, g.group_number, g.students, g.is_priority,
+           g.career_id, g.semester,
+           s.id AS subject_id, s.name AS subject_name, s.needs_lab
+    FROM groups g
+    JOIN subjects s ON s.career_id = g.career_id AND s.semester = g.semester
+    WHERE g.career_id=? ${semester ? 'AND g.semester=?' : ''}
+    ORDER BY g.is_priority DESC, g.students DESC, s.name
   `).bind(...(semester ? [careerId, semester] : [careerId])).all();
 
   const { results: rooms } = await DB.prepare(
@@ -53,7 +56,8 @@ export async function buildProposal(DB, careerId, semester) {
 
   const assigned = [];
   const unassigned = [];
-  const used = new Set(); // `${room_id}-${day}-${start}`
+  const used      = new Set(); // `${room_id}-${day}-${start}`
+  const groupUsed = new Set(); // `${group_id}-${day}-${start}` — prevents double-booking a cohort
 
   for (const group of sortByPriority(groups)) {
     const reqs = allReqs.filter(r => r.subject_id === group.subject_id);
@@ -69,12 +73,14 @@ export async function buildProposal(DB, careerId, semester) {
     let placed = false;
     outer: for (const day of DAYS) {
       for (const [start, end] of TIME_PAIRS) {
+        if (groupUsed.has(`${group.group_id}-${day}-${start}`)) continue;
         const slotRooms = eligibleRooms.filter(r => !used.has(`${r.id}-${day}-${start}`));
         const room = bestFitRoom(slotRooms, group.students);
         if (!room) continue;
 
         assigned.push({
-          group_id:     group.id,
+          group_id:     group.group_id,
+          subject_id:   group.subject_id,
           group_number: group.group_number,
           subject_name: group.subject_name,
           room_id:      room.id,
@@ -85,6 +91,7 @@ export async function buildProposal(DB, careerId, semester) {
           warning: reportedRooms.has(room.id) ? 'Lab has open equipment reports' : null,
         });
         used.add(`${room.id}-${day}-${start}`);
+        groupUsed.add(`${group.group_id}-${day}-${start}`);
         placed = true;
         break outer;
       }

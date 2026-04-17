@@ -145,11 +145,11 @@ export async function openProfessorModal(prof, onDone) {
   });
 }
 
-export async function openGroupsModal(subject) {
+export async function openGroupsModal({ career_id, semester, career_name }) {
   const { subjectsApi } = await import('../modules/subjects.js');
 
   async function renderGroups(container) {
-    const groups = await subjectsApi.listGroups(subject.id);
+    const groups = await subjectsApi.listGroups(career_id, semester);
     container.innerHTML = groups.length ? `
       <table class="data-table" style="margin-bottom:12px">
         <thead><tr><th>Grupo</th><th>Alumnos</th><th>Prioritario</th><th></th></tr></thead>
@@ -179,7 +179,7 @@ export async function openGroupsModal(subject) {
   modal.className = 'modal-overlay';
   modal.innerHTML = `
     <div class="modal-box" style="max-width:520px">
-      <h2>Grupos — ${subject.name}</h2>
+      <h2>Grupos — ${career_name}, Semestre ${semester}</h2>
       <div class="modal-body">
         <div id="groups-list">Cargando...</div>
         <details style="margin-top:8px">
@@ -205,13 +205,16 @@ export async function openGroupsModal(subject) {
 
   modal.querySelector('#g-close').addEventListener('click', () => modal.remove());
   modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  document.addEventListener('keydown', function esc(e) {
+    if (e.key === 'Escape') { modal.remove(); document.removeEventListener('keydown', esc); }
+  }, { once: true });
 
   modal.querySelector('#g-save').addEventListener('click', async () => {
     const group_number = Number(modal.querySelector('#g-num').value);
     const students     = Number(modal.querySelector('#g-students').value);
     const is_priority  = modal.querySelector('#g-priority').checked ? 1 : 0;
     if (!group_number || !students) return;
-    await subjectsApi.createGroup({ subject_id: subject.id, group_number, students, is_priority });
+    await subjectsApi.createGroup({ career_id, semester, group_number, students, is_priority });
     modal.querySelector('#g-num').value = group_number + 1;
     renderGroups(listEl);
   });
