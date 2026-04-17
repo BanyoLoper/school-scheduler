@@ -29,4 +29,17 @@ export async function initSidebar(activePath) {
 
   const navEl = document.querySelector('.sidebar-nav');
   if (navEl) navEl.innerHTML = navHtml;
+
+  // Smooth page transitions
+  const main = document.querySelector('.main-content');
+  if (main) {
+    navEl.addEventListener('click', e => {
+      const link = e.target.closest('a[href]');
+      if (!link || link.classList.contains('active')) return;
+      e.preventDefault();
+      const dest = link.href;
+      main.classList.add('leaving');
+      setTimeout(() => { window.location.href = dest; }, 130);
+    });
+  }
 }
