@@ -11,14 +11,7 @@
 <div class="app-layout">
   <aside class="sidebar">
     <div class="sidebar-logo">📅 School Schedule</div>
-    <nav class="sidebar-nav">
-      <a href="/dashboard.html" class="active">Dashboard</a>
-      <a href="/schedule.html">Horario</a>
-      <a href="/rooms.html">Salones</a>
-      <a href="/subjects.html">Materias</a>
-      <a href="/negotiations.html">Negociaciones</a>
-      <a href="/lab-inventory.html">Inventario Labs</a>
-    </nav>
+    <nav class="sidebar-nav"></nav>
     <div class="sidebar-user" id="user-info">Cargando...</div>
   </aside>
 
@@ -48,12 +41,10 @@
 </div>
 
 <script type="module">
-  import { requireAuth, getUser } from '/assets/js/core/auth.js';
+  import { initSidebar } from '/assets/js/components/sidebar.js';
   import { api } from '/assets/js/core/api.js';
 
-  requireAuth();
-  const user = getUser();
-  document.getElementById('user-info').textContent = user?.name ?? user?.email;
+  await initSidebar('/dashboard.html');
 
   async function loadDashboard() {
     const [rooms, reports, negotiations, subjects] = await Promise.all([

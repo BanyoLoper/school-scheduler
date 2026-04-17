@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — School Schedule</title>
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  <link rel="stylesheet" href="/assets/css/components.css" />
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo">📅 School Schedule</div>
+    <nav class="sidebar-nav"></nav>
+    <div class="sidebar-user" id="user-info">Cargando...</div>
+  </aside>
+
+  <main class="main-content">
+    <div class="page-header">
+      <h1>Administración</h1>
+    </div>
+
+    <div class="tabs" style="margin-bottom:24px">
+      <button class="tab-btn active" data-tab="coordinators">Coordinadores</button>
+      <button class="tab-btn" data-tab="careers">Carreras</button>
+    </div>
+
+    <div id="tab-coordinators"></div>
+    <div id="tab-careers" style="display:none"></div>
+  </main>
+</div>
+
+<script type="module">
+  import { getProfile, isAdmin } from '/assets/js/core/profile.js';
+  import { initSidebar }         from '/assets/js/components/sidebar.js';
+  import { loadCoordinators }    from '/assets/js/modules/admin.js';
+  import { loadCareers }         from '/assets/js/modules/careers-admin.js';
+
+  const profile = await getProfile();
+  if (!isAdmin()) { window.location.href = '/dashboard.html'; }
+
+  await initSidebar('/admin.html');
+
+  const tabs = document.querySelectorAll('.tab-btn');
+  tabs.forEach(btn => btn.addEventListener('click', () => {
+    tabs.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-coordinators').style.display = btn.dataset.tab === 'coordinators' ? '' : 'none';
+    document.getElementById('tab-careers').style.display      = btn.dataset.tab === 'careers'      ? '' : 'none';
+  }));
+
+  loadCoordinators('tab-coordinators');
+  loadCareers('tab-careers');
+</script>
+</body>
+</html>

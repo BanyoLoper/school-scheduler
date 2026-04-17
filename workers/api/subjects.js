@@ -35,10 +35,22 @@ export async function handleSubjects(request, { env, user, json, url }) {
   }
 
   if (method === 'GET' && !id) {
-    const careerId = url.searchParams.get('career_id') ?? user.career_id;
+    const filterCareer = url.searchParams.get('career_id');
     const semester = url.searchParams.get('semester');
-    let query  = 'SELECT * FROM subjects WHERE career_id = ?';
-    const binds = [careerId];
+    let query, binds;
+    if (filterCareer) {
+      query = 'SELECT * FROM subjects WHERE career_id = ?';
+      binds = [filterCareer];
+    } else if (user.role === 'admin') {
+      query = 'SELECT * FROM subjects WHERE 1=1';
+      binds = [];
+    } else {
+      const ids = user.career_ids;
+      if (!ids.length) return json([]);
+      const ph = ids.map(() => '?').join(',');
+      query = `SELECT * FROM subjects WHERE career_id IN (${ph})`;
+      binds = [...ids];
+    }
     if (semester) { query += ' AND semester = ?'; binds.push(semester); }
     query += ' ORDER BY semester, name';
     const { results } = await DB.prepare(query).bind(...binds).all();
@@ -56,6 +68,8 @@ export async function handleSubjects(request, { env, user, json, url }) {
   if (method === 'POST') {
     const { name, career_id, semester, needs_lab = 0, software_requirements = [] } = await request.json();
     if (!name || !career_id || !semester) return json({ error: 'name, career_id, semester required' }, 400);
+    if (user.role !== 'admin' && !user.career_ids.includes(career_id))
+      return json({ error: 'Forbidden: career not assigned' }, 403);
     const subject = await DB.prepare(
       'INSERT INTO subjects (name, career_id, semester, needs_lab) VALUES (?, ?, ?, ?) RETURNING *'
     ).bind(name, career_id, semester, needs_lab).first();

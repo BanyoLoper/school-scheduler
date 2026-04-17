@@ -11,14 +11,7 @@
 <div class="app-layout">
   <aside class="sidebar">
     <div class="sidebar-logo">📅 School Schedule</div>
-    <nav class="sidebar-nav">
-      <a href="/dashboard.html">Dashboard</a>
-      <a href="/schedule.html">Horario</a>
-      <a href="/rooms.html">Salones</a>
-      <a href="/subjects.html">Materias</a>
-      <a href="/negotiations.html" class="active">Negociaciones</a>
-      <a href="/lab-inventory.html">Inventario Labs</a>
-    </nav>
+    <nav class="sidebar-nav"></nav>
     <div class="sidebar-user" id="user-info"></div>
   </aside>
 
@@ -44,10 +37,9 @@
 </div>
 
 <script type="module">
-  import { requireAuth, getUser } from '/assets/js/core/auth.js';
+  import { initSidebar } from '/assets/js/components/sidebar.js';
   import { initNegotiationsPage } from '/assets/js/modules/negotiations.js';
-  requireAuth();
-  document.getElementById('user-info').textContent = getUser()?.name ?? '';
+  await initSidebar('/negotiations.html');
   initNegotiationsPage();
 </script>
 </body>

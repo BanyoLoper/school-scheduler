@@ -5,8 +5,18 @@ export async function handleProfessors(request, { env, user, json, url }) {
   const id       = segments[0] ? Number(segments[0]) : null;
 
   if (method === 'GET' && !id) {
-    const careerId = url.searchParams.get('career_id') ?? user.career_id;
-    const { results } = await DB.prepare('SELECT * FROM professors WHERE career_id=? ORDER BY name').bind(careerId).all();
+    const filterCareer = url.searchParams.get('career_id');
+    let results;
+    if (filterCareer) {
+      ({ results } = await DB.prepare('SELECT * FROM professors WHERE career_id=? ORDER BY name').bind(filterCareer).all());
+    } else if (user.role === 'admin') {
+      ({ results } = await DB.prepare('SELECT * FROM professors ORDER BY name').all());
+    } else {
+      const ids = user.career_ids;
+      if (!ids.length) return json([]);
+      const ph = ids.map(() => '?').join(',');
+      ({ results } = await DB.prepare(`SELECT * FROM professors WHERE career_id IN (${ph}) ORDER BY name`).bind(...ids).all());
+    }
     return json(results);
   }
 

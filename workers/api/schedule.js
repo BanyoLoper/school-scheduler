@@ -8,9 +8,9 @@ export async function handleSchedule(request, { env, user, json, url }) {
   const id       = !isGen && segments[0] ? Number(segments[0]) : null;
 
   if (method === 'GET') {
-    const careerId = url.searchParams.get('career_id') ?? user.career_id;
+    const filterCareer = url.searchParams.get('career_id');
     const semester = url.searchParams.get('semester');
-    let query = `
+    const base = `
       SELECT a.*, r.name AS room_name, r.type AS room_type,
              p.name AS professor_name,
              g.group_number, g.students, g.is_priority,
@@ -19,9 +19,21 @@ export async function handleSchedule(request, { env, user, json, url }) {
       JOIN groups   g ON g.id = a.group_id
       JOIN subjects s ON s.id = g.subject_id
       JOIN rooms    r ON r.id = a.room_id
-      LEFT JOIN professors p ON p.id = a.professor_id
-      WHERE s.career_id = ?`;
-    const binds = [careerId];
+      LEFT JOIN professors p ON p.id = a.professor_id`;
+    let query, binds;
+    if (filterCareer) {
+      query = `${base} WHERE s.career_id = ?`;
+      binds = [filterCareer];
+    } else if (user.role === 'admin') {
+      query = `${base} WHERE 1=1`;
+      binds = [];
+    } else {
+      const ids = user.career_ids;
+      if (!ids.length) return json([]);
+      const ph = ids.map(() => '?').join(',');
+      query = `${base} WHERE s.career_id IN (${ph})`;
+      binds = [...ids];
+    }
     if (semester) { query += ' AND s.semester=?'; binds.push(semester); }
     query += ' ORDER BY a.day, a.start_time';
     const { results } = await DB.prepare(query).bind(...binds).all();
@@ -30,7 +42,10 @@ export async function handleSchedule(request, { env, user, json, url }) {
 
   if (method === 'POST' && isGen) {
     const { career_id, semester } = await request.json();
-    const proposal = await runScheduler(DB, career_id ?? user.career_id, semester);
+    const cid = career_id ?? user.career_ids[0];
+    if (user.role !== 'admin' && !user.career_ids.includes(cid))
+      return json({ error: 'Forbidden: career not assigned' }, 403);
+    const proposal = await runScheduler(DB, cid, semester);
     return json(proposal);
   }
 
