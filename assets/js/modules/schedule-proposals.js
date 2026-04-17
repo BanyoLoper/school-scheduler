@@ -28,9 +28,6 @@ export async function renderProposalsList() {
   container.querySelectorAll('[data-vote]').forEach(btn => {
     btn.addEventListener('click', () => vote(btn.dataset.pid, btn.dataset.vote, profile.email));
   });
-  container.querySelectorAll('[data-view]').forEach(btn => {
-    btn.addEventListener('click', () => viewProposal(btn.dataset.pid));
-  });
   container.querySelectorAll('[data-del]').forEach(btn => {
     btn.addEventListener('click', () => deleteProposal(btn.dataset.pid));
   });
@@ -72,7 +69,6 @@ function buildCard(p, profile) {
                 data-vote="down" data-pid="${p.id}">
           👎 <span class="vote-count">${downVotes}</span>
         </button>
-        <button class="btn btn-sm btn-secondary" data-view="${p.id}">Ver horario</button>
         ${canDelete ? `<button class="btn btn-sm btn-danger" data-del="${p.id}">Eliminar</button>` : ''}
       </div>
     </div>`;
@@ -99,14 +95,3 @@ function deleteProposal(pid) {
   renderProposalsList();
 }
 
-function viewProposal(pid) {
-  // Dispatch event — schedule.js listens and activates read-only mode
-  document.dispatchEvent(new CustomEvent('schedule:view-proposal', { detail: { pid } }));
-
-  // Switch to editor tab
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-panel').forEach(p => { p.hidden = true; });
-  document.querySelector('[data-tab="editor"]')?.classList.add('active');
-  const editorTab = document.getElementById('tab-editor');
-  if (editorTab) editorTab.hidden = false;
-}

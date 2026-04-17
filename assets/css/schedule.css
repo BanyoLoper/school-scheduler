@@ -216,5 +216,66 @@
   font-weight: 600;
 }
 
-/* ── Read-only view overlay ─────────────────────────────────────── */
-.schedule-nav.readonly .btn { opacity: .4; pointer-events: none; }
+/* ── Pending subjects panel ─────────────────────────────────────── */
+.pending-panel {
+  margin-top: 24px;
+  border-top: 1px solid var(--color-border);
+  padding-top: 16px;
+}
+.pending-header {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pending-count {
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 99px;
+  padding: 1px 7px;
+}
+.pending-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pending-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: default;
+}
+.pending-tag.half {
+  border-color: var(--color-warning);
+  background: #fffbeb;
+}
+.pending-tag em {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--color-muted);
+}
+.pending-sessions {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-muted);
+  background: var(--color-border);
+  border-radius: 4px;
+  padding: 0 5px;
+}
+.pending-tag.half .pending-sessions {
+  color: #92400e;
+  background: #fde68a;
+}
+.pending-empty {
+  font-size: 13px;
+  color: var(--color-muted);
+}

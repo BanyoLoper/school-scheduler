@@ -29,11 +29,6 @@
     <!-- ── Editor tab ── -->
     <div id="tab-editor" class="tab-panel">
 
-      <div id="readonly-banner" class="alert alert-info" hidden style="margin-bottom:12px;display:flex;align-items:center;gap:12px">
-        <span>Vista de solo lectura</span>
-        <button id="btn-exit-readonly" class="btn btn-sm btn-secondary">Volver a editar</button>
-      </div>
-
       <div class="schedule-nav">
         <div class="nav-group">
           <button class="btn btn-sm btn-secondary" id="career-prev" title="Carrera anterior (↑)">↑</button>
@@ -55,6 +50,8 @@
       <div style="overflow-x:auto;margin-top:16px">
         <div id="schedule-grid"><p style="color:var(--color-muted)">Cargando…</p></div>
       </div>
+
+      <div id="pending-subjects" class="pending-panel"></div>
     </div>
 
     <!-- ── Proposals tab ── -->
