@@ -3,17 +3,28 @@
 -- =============================================================
 
 CREATE TABLE IF NOT EXISTS careers (
-  id          INTEGER PRIMARY KEY AUTOINCREMENT,
-  name        TEXT    NOT NULL,
-  description TEXT
+  id               INTEGER PRIMARY KEY AUTOINCREMENT,
+  name             TEXT    NOT NULL,
+  description      TEXT,
+  code             TEXT,
+  total_semesters  INTEGER NOT NULL DEFAULT 9
 );
 
 CREATE TABLE IF NOT EXISTS coordinators (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   name       TEXT    NOT NULL,
   email      TEXT    NOT NULL UNIQUE,
-  career_id  INTEGER NOT NULL,
-  FOREIGN KEY (career_id) REFERENCES careers(id) ON DELETE CASCADE
+  career_id  INTEGER,
+  role       TEXT    NOT NULL DEFAULT 'coordinator' CHECK(role IN ('admin','coordinator')),
+  FOREIGN KEY (career_id) REFERENCES careers(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS coordinator_careers (
+  coordinator_id INTEGER NOT NULL,
+  career_id      INTEGER NOT NULL,
+  PRIMARY KEY (coordinator_id, career_id),
+  FOREIGN KEY (coordinator_id) REFERENCES coordinators(id) ON DELETE CASCADE,
+  FOREIGN KEY (career_id)      REFERENCES careers(id)      ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS rooms (
@@ -140,6 +151,8 @@ CREATE TABLE IF NOT EXISTS computer_reports (
 -- ---------------------------------------------------------------
 -- Indexes
 -- ---------------------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_coordinator_careers_coord ON coordinator_careers(coordinator_id);
+CREATE INDEX IF NOT EXISTS idx_coordinator_careers_career ON coordinator_careers(career_id);
 CREATE INDEX IF NOT EXISTS idx_assignments_room_day      ON assignments(room_id, day);
 CREATE INDEX IF NOT EXISTS idx_assignments_professor_day ON assignments(professor_id, day);
 CREATE INDEX IF NOT EXISTS idx_availability_professor    ON availability(professor_id, day);
