@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inventario de Laboratorios — School Schedule</title>
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  <link rel="stylesheet" href="/assets/css/components.css" />
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo">📅 School Schedule</div>
+    <nav class="sidebar-nav">
+      <a href="/dashboard.html">Dashboard</a>
+      <a href="/schedule.html">Horario</a>
+      <a href="/rooms.html">Salones</a>
+      <a href="/subjects.html">Materias</a>
+      <a href="/negotiations.html">Negociaciones</a>
+      <a href="/lab-inventory.html" class="active">Inventario Labs</a>
+    </nav>
+    <div class="sidebar-user" id="user-info"></div>
+  </aside>
+
+  <main class="main-content">
+    <div class="page-header">
+      <h1>Inventario de Software por Laboratorio</h1>
+      <button class="btn btn-primary" id="btn-add-software">+ Agregar software</button>
+    </div>
+
+    <div class="filters-bar">
+      <label>Laboratorio
+        <select id="filter-room">
+          <option value="">Selecciona un lab</option>
+        </select>
+      </label>
+    </div>
+
+    <div id="software-container">
+      <p class="text-muted">Selecciona un laboratorio para ver su software instalado.</p>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+  import { requireAuth, getUser } from '/assets/js/core/auth.js';
+  import { initLabInventoryPage } from '/assets/js/modules/lab-inventory.js';
+  requireAuth();
+  document.getElementById('user-info').textContent = getUser()?.name ?? '';
+  initLabInventoryPage();
+</script>
+</body>
+</html>

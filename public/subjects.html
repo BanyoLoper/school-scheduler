@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Materias — School Schedule</title>
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  <link rel="stylesheet" href="/assets/css/components.css" />
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo">📅 School Schedule</div>
+    <nav class="sidebar-nav">
+      <a href="/dashboard.html">Dashboard</a>
+      <a href="/schedule.html">Horario</a>
+      <a href="/rooms.html">Salones</a>
+      <a href="/subjects.html" class="active">Materias</a>
+      <a href="/negotiations.html">Negociaciones</a>
+      <a href="/lab-inventory.html">Inventario Labs</a>
+    </nav>
+    <div class="sidebar-user" id="user-info"></div>
+  </aside>
+
+  <main class="main-content">
+    <div class="page-header">
+      <h1>Materias y Grupos</h1>
+      <button class="btn btn-primary" id="btn-add-subject">+ Nueva materia</button>
+    </div>
+
+    <div class="filters-bar">
+      <label>Semestre
+        <select id="filter-semester">
+          <option value="">Todos</option>
+          <option>1</option><option>2</option><option>3</option>
+          <option>4</option><option>5</option><option>6</option>
+          <option>7</option><option>8</option><option>9</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Materia</th><th>Semestre</th><th>Tipo</th>
+            <th>Software requerido</th><th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="subjects-tbody">
+          <tr><td colspan="5">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+  import { requireAuth, getUser } from '/assets/js/core/auth.js';
+  import { initSubjectsPage } from '/assets/js/modules/subjects.js';
+  requireAuth();
+  document.getElementById('user-info').textContent = getUser()?.name ?? '';
+  initSubjectsPage();
+</script>
+</body>
+</html>

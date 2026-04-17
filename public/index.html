@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>School Schedule</title>
+  <link rel="stylesheet" href="/assets/css/main.css" />
+</head>
+<body>
+  <div class="public-layout">
+    <div class="public-card" style="text-align:center">
+      <h1>School Schedule</h1>
+      <p class="subtitle">Sistema de gestión de horarios escolares</p>
+      <p style="color:var(--color-muted); margin-bottom:24px">
+        Acceso restringido a coordinadores autorizados.<br>
+        Serás redirigido automáticamente al proveedor de identidad.
+      </p>
+      <a href="/dashboard.html" class="btn btn-primary" style="width:100%;justify-content:center">
+        Entrar al sistema
+      </a>
+      <p style="margin-top:20px; font-size:12px; color:var(--color-muted)">
+        ¿Eres docente? <a href="/availability.html">Registra tu disponibilidad</a><br>
+        ¿Problemas con un equipo? <a href="/reports.html">Reportar falla</a>
+      </p>
+    </div>
+  </div>
+  <script type="module">
+    import { isAuthenticated } from '/assets/js/core/auth.js';
+    if (isAuthenticated()) window.location.href = '/dashboard.html';
+  </script>
+</body>
+</html>

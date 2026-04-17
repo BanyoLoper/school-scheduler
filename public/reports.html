@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reportar Falla de Equipo — School Schedule</title>
+  <link rel="stylesheet" href="/assets/css/main.css" />
+</head>
+<body>
+<div class="public-layout">
+  <div class="public-card">
+    <h1>Reportar Falla de Equipo</h1>
+    <p class="subtitle">Informa sobre equipos con problemas en los laboratorios. No necesitas cuenta.</p>
+
+    <div id="form-message" class="alert" hidden></div>
+
+    <form id="report-form" class="form-stack">
+      <label>Laboratorio
+        <select name="room_id" id="room-select" required>
+          <option value="">Cargando laboratorios...</option>
+        </select>
+      </label>
+      <label>Número / etiqueta del equipo
+        <input type="text" name="computer_tag" placeholder="Ej: PC-07" required />
+      </label>
+      <label>Reportado por
+        <select name="reported_by" required>
+          <option value="">Selecciona</option>
+          <option value="student">Alumno</option>
+          <option value="teacher">Docente</option>
+        </select>
+      </label>
+      <label>Descripción del problema
+        <textarea name="description" rows="4" placeholder="Describe brevemente la falla..." required></textarea>
+      </label>
+      <button type="submit" class="btn btn-danger" style="width:100%;justify-content:center">
+        Enviar reporte
+      </button>
+    </form>
+  </div>
+</div>
+
+<script type="module">
+  import { initPublicReportsPage } from '/assets/js/modules/reports.js';
+  initPublicReportsPage();
+</script>
+</body>
+</html>

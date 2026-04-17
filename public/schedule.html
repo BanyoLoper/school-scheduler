@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Horario — School Schedule</title>
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  <link rel="stylesheet" href="/assets/css/components.css" />
+  <link rel="stylesheet" href="/assets/css/schedule.css" />
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo">📅 School Schedule</div>
+    <nav class="sidebar-nav">
+      <a href="/dashboard.html">Dashboard</a>
+      <a href="/schedule.html" class="active">Horario</a>
+      <a href="/rooms.html">Salones</a>
+      <a href="/subjects.html">Materias</a>
+      <a href="/negotiations.html">Negociaciones</a>
+      <a href="/lab-inventory.html">Inventario Labs</a>
+    </nav>
+    <div class="sidebar-user" id="user-info"></div>
+  </aside>
+
+  <main class="main-content">
+    <div class="page-header">
+      <h1>Constructor de Horario</h1>
+    </div>
+
+    <div class="schedule-toolbar">
+      <label>Semestre
+        <select id="filter-semester">
+          <option value="">Todos</option>
+          <option>1</option><option>2</option><option>3</option>
+          <option>4</option><option>5</option><option>6</option>
+        </select>
+      </label>
+      <button class="btn btn-primary" id="btn-generate">⚡ Generar propuesta</button>
+      <div class="schedule-legend">
+        <span><span class="legend-dot normal"></span>Normal</span>
+        <span><span class="legend-dot priority"></span>Prioritaria</span>
+        <span><span class="legend-dot warning"></span>Advertencia</span>
+      </div>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <div id="schedule-grid"><p>Cargando horario...</p></div>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+  import { requireAuth, getUser } from '/assets/js/core/auth.js';
+  import { initSchedulePage } from '/assets/js/modules/schedule.js';
+  requireAuth();
+  document.getElementById('user-info').textContent = getUser()?.name ?? '';
+  initSchedulePage();
+</script>
+</body>
+</html>

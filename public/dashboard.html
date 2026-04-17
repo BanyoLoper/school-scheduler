@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — School Schedule</title>
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  <link rel="stylesheet" href="/assets/css/components.css" />
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo">📅 School Schedule</div>
+    <nav class="sidebar-nav">
+      <a href="/dashboard.html" class="active">Dashboard</a>
+      <a href="/schedule.html">Horario</a>
+      <a href="/rooms.html">Salones</a>
+      <a href="/subjects.html">Materias</a>
+      <a href="/negotiations.html">Negociaciones</a>
+      <a href="/lab-inventory.html">Inventario Labs</a>
+    </nav>
+    <div class="sidebar-user" id="user-info">Cargando...</div>
+  </aside>
+
+  <main class="main-content">
+    <div class="page-header">
+      <h1>Dashboard</h1>
+    </div>
+
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card"><div class="stat-value" id="stat-rooms">—</div><div class="stat-label">Salones totales</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-available">—</div><div class="stat-label">Disponibles</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-subjects">—</div><div class="stat-label">Materias</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-reports">—</div><div class="stat-label">Reportes abiertos</div></div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+      <div>
+        <h2 style="margin-bottom:12px; font-size:16px">Reportes recientes</h2>
+        <div class="table-container" id="reports-list"><p style="padding:16px;color:var(--color-muted)">Cargando...</p></div>
+      </div>
+      <div>
+        <h2 style="margin-bottom:12px; font-size:16px">Negociaciones pendientes</h2>
+        <div class="table-container" id="negotiations-list"><p style="padding:16px;color:var(--color-muted)">Cargando...</p></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+  import { requireAuth, getUser } from '/assets/js/core/auth.js';
+  import { api } from '/assets/js/core/api.js';
+
+  requireAuth();
+  const user = getUser();
+  document.getElementById('user-info').textContent = user?.name ?? user?.email;
+
+  async function loadDashboard() {
+    const [rooms, reports, negotiations, subjects] = await Promise.all([
+      api.get('/rooms'),
+      api.get('/reports?status=open'),
+      api.get('/negotiations'),
+      api.get('/subjects'),
+    ]);
+
+    document.getElementById('stat-rooms').textContent     = rooms.length;
+    document.getElementById('stat-available').textContent = rooms.filter(r => !r.is_blocked).length;
+    document.getElementById('stat-subjects').textContent  = subjects.length;
+    document.getElementById('stat-reports').textContent   = reports.length;
+
+    const reportsList = document.getElementById('reports-list');
+    reportsList.innerHTML = reports.slice(0, 5).map(r => `
+      <div class="report-item">
+        <span class="report-tag">${r.computer_tag}</span>
+        <div>
+          <div>${r.room_name} — ${r.description.slice(0, 60)}${r.description.length > 60 ? '…' : ''}</div>
+          <div class="report-meta">${r.reported_by} · ${new Date(r.created_at).toLocaleDateString('es')}</div>
+        </div>
+        <span class="badge badge-danger" style="margin-left:auto">Abierto</span>
+      </div>`).join('') || '<p style="padding:16px;color:var(--color-muted)">Sin reportes abiertos</p>';
+
+    const pending = negotiations.filter(n => n.status === 'pending');
+    const negList = document.getElementById('negotiations-list');
+    negList.innerHTML = pending.slice(0, 5).map(n => `
+      <div class="report-item">
+        <div>
+          <div>${n.requester_name} → ${n.target_name}</div>
+          <div class="report-meta">${n.room_a} ↔ ${n.room_b}</div>
+        </div>
+        <span class="badge badge-warning" style="margin-left:auto">Pendiente</span>
+      </div>`).join('') || '<p style="padding:16px;color:var(--color-muted)">Sin negociaciones pendientes</p>';
+  }
+
+  loadDashboard();
+</script>
+</body>
+</html>

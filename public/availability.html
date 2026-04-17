@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Disponibilidad Docente — School Schedule</title>
+  <link rel="stylesheet" href="/assets/css/main.css" />
+</head>
+<body>
+<div class="public-layout">
+  <div class="public-card">
+    <h1>Disponibilidad Docente</h1>
+    <p class="subtitle">Registra los días y horarios en que puedes impartir clase.</p>
+
+    <div id="form-message" class="alert" hidden></div>
+
+    <form id="availability-form" class="form-stack">
+      <label>Nombre del profesor
+        <input type="text" name="professor_id" placeholder="ID o nombre" required />
+      </label>
+      <label>Día
+        <select name="day" required>
+          <option value="">Selecciona un día</option>
+          <option value="monday">Lunes</option>
+          <option value="tuesday">Martes</option>
+          <option value="wednesday">Miércoles</option>
+          <option value="thursday">Jueves</option>
+          <option value="friday">Viernes</option>
+          <option value="saturday">Sábado</option>
+        </select>
+      </label>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+        <label>Hora inicio
+          <input type="time" name="start_time" required min="07:00" max="21:00" step="3600" />
+        </label>
+        <label>Hora fin
+          <input type="time" name="end_time" required min="08:00" max="22:00" step="3600" />
+        </label>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">
+        Registrar disponibilidad
+      </button>
+    </form>
+  </div>
+</div>
+
+<script type="module">
+  import { initPublicAvailabilityPage } from '/assets/js/modules/availability.js';
+  initPublicAvailabilityPage();
+</script>
+</body>
+</html>

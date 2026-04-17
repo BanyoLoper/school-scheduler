@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Negociaciones — School Schedule</title>
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  <link rel="stylesheet" href="/assets/css/components.css" />
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo">📅 School Schedule</div>
+    <nav class="sidebar-nav">
+      <a href="/dashboard.html">Dashboard</a>
+      <a href="/schedule.html">Horario</a>
+      <a href="/rooms.html">Salones</a>
+      <a href="/subjects.html">Materias</a>
+      <a href="/negotiations.html" class="active">Negociaciones</a>
+      <a href="/lab-inventory.html">Inventario Labs</a>
+    </nav>
+    <div class="sidebar-user" id="user-info"></div>
+  </aside>
+
+  <main class="main-content">
+    <div class="page-header">
+      <h1>Negociaciones de Salones</h1>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Coordinadores</th><th>Salón A</th><th>Salón B</th>
+            <th>Estado</th><th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="negotiations-tbody">
+          <tr><td colspan="5">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+  import { requireAuth, getUser } from '/assets/js/core/auth.js';
+  import { initNegotiationsPage } from '/assets/js/modules/negotiations.js';
+  requireAuth();
+  document.getElementById('user-info').textContent = getUser()?.name ?? '';
+  initNegotiationsPage();
+</script>
+</body>
+</html>

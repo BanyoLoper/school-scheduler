@@ -1,0 +1,16 @@
+name = "school-schedule-api"
+main = "workers/api/index.js"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding      = "DB"
+database_name = "school-schedule-db"
+database_id  = "YOUR_DATABASE_ID_HERE"
+
+[vars]
+ALLOWED_ORIGIN = "https://school-schedule.pages.dev"
+
+[[rules]]
+type = "ESModule"
+globs = ["**/*.js"]
