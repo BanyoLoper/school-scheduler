@@ -49,7 +49,7 @@
   async function loadDashboard() {
     const [rooms, reports, negotiations, subjects] = await Promise.all([
       api.get('/rooms'),
-      api.get('/reports?status=open'),
+      api.get('/reports?status=pending'),
       api.get('/negotiations'),
       api.get('/subjects'),
     ]);
@@ -65,9 +65,9 @@
         <span class="report-tag">${r.computer_tag}</span>
         <div>
           <div>${r.room_name} — ${r.description.slice(0, 60)}${r.description.length > 60 ? '…' : ''}</div>
-          <div class="report-meta">${r.reported_by} · ${new Date(r.created_at).toLocaleDateString('es')}</div>
+          <div class="report-meta">${r.reported_by === 'teacher' ? 'Profesor' : 'Alumno'} · ${new Date(r.created_at).toLocaleDateString('es')}</div>
         </div>
-        <span class="badge badge-danger" style="margin-left:auto">Abierto</span>
+        <a href="/reports-admin.html" class="badge badge-warning" style="margin-left:auto;text-decoration:none">Pendiente</a>
       </div>`).join('') || '<p style="padding:16px;color:var(--color-muted)">Sin reportes abiertos</p>';
 
     const pending = negotiations.filter(n => n.status === 'pending');

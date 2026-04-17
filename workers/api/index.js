@@ -71,13 +71,13 @@ export default {
     }
 
     const isPublic = PUBLIC_PREFIXES.some(p => path.startsWith(p));
-    const email    = parseJwtEmail(request);
+    const email    = env.DEV_EMAIL ?? parseJwtEmail(request);
 
     if (!isPublic && !email) {
       return withCors(json({ error: 'Unauthorized' }, 401), origin);
     }
 
-    const user = isPublic ? null : await resolveProfile(email, env);
+    const user = email ? await resolveProfile(email, env) : null;
 
     if (!isPublic && !user) {
       return withCors(json({ error: 'Coordinator not found' }, 403), origin);

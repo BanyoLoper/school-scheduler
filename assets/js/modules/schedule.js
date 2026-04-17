@@ -1,5 +1,5 @@
 import { api } from '../core/api.js';
-import { getUser } from '../core/auth.js';
+import { getProfile } from '../core/profile.js';
 import { renderGrid } from '../components/schedule-grid.js';
 import { showModal } from '../components/modal.js';
 import { findLocalConflicts } from '../components/confilct-checker.js';
@@ -17,13 +17,13 @@ let _assignments = [];
 export function getAssignments() { return _assignments; }
 
 export async function initSchedulePage() {
-  const user     = getUser();
+  const profile  = await getProfile();
   const gridEl   = document.getElementById('schedule-grid');
   const semesterSel = document.getElementById('filter-semester');
   const btnGen   = document.getElementById('btn-generate');
 
   async function load() {
-    const params = { career_id: user.career_id };
+    const params = {};
     if (semesterSel?.value) params.semester = semesterSel.value;
     _assignments = await scheduleApi.list(params);
     renderGrid(gridEl, _assignments, onDrop);
@@ -52,7 +52,7 @@ export async function initSchedulePage() {
     btnGen.textContent = 'Generando...';
     try {
       const semester = semesterSel?.value ? Number(semesterSel.value) : null;
-      const result   = await scheduleApi.generate({ career_id: user.career_id, semester });
+      const result   = await scheduleApi.generate({ career_id: profile.career_ids[0] ?? null, semester });
 
       const confirmed = await showModal({
         title: `Propuesta generada — ${result.assigned.length} asignaciones`,
