@@ -19,10 +19,8 @@ const STORAGE_KEY = 'school-schedule-proposals';
 // ── Module state ─────────────────────────────────────────────────────
 let cache    = null;
 let profile  = null;
-let working  = [];        // Array<Assignment> — current working proposal
+let working  = [];
 let navState = { careerIdx: 0, semester: 1 };
-let readOnly = false;
-let readOnlyProposal = null;
 
 function toMin(t) { const [h,m] = t.split(':').map(Number); return h*60+m; }
 
@@ -78,10 +76,9 @@ function renderGrid() {
   const container = document.getElementById('schedule-grid');
   if (!container || !cache) return;
 
-  const career   = currentCareer();
-  const sem      = navState.semester;
-  const source   = readOnly ? (readOnlyProposal?.assignments ?? []) : working;
-  const view     = source.filter(a => a.career_id === career?.id && a.semester === sem);
+  const career = currentCareer();
+  const sem    = navState.semester;
+  const view   = working.filter(a => a.career_id === career?.id && a.semester === sem);
 
   const byCell = {};
   for (const a of view) {
@@ -101,8 +98,7 @@ function renderGrid() {
       } else if (items.length === 1) {
         content = buildBlock(items[0], 1);
       }
-      const ro = readOnly ? ' read-only' : '';
-      return `<td class="grid-cell${ro}" data-day="${day}" data-start="${slot.start}" data-end="${slot.end}">${content}</td>`;
+      return `<td class="grid-cell" data-day="${day}" data-start="${slot.start}" data-end="${slot.end}">${content}</td>`;
     }).join('');
     return `<tr><td class="time-label">${slot.label}</td>${cells}</tr>`;
   }).join('');
@@ -113,7 +109,7 @@ function renderGrid() {
       <tbody>${rows}</tbody>
     </table>`;
 
-  if (!readOnly) attachGridEvents(container);
+  attachGridEvents(container);
 }
 
 function buildBlock(a, countInCell) {
@@ -141,7 +137,53 @@ function buildBlock(a, countInCell) {
     </div>`;
 }
 
-// ── Grid events (drag & drop + click) ───────────────────────────────
+// ── Pending subjects panel ───────────────────────────────────────────
+function renderPending() {
+  const container = document.getElementById('pending-subjects');
+  if (!container || !cache) return;
+
+  const career  = currentCareer();
+  const sem     = navState.semester;
+  const groups  = cache.groups.filter(g => g.career_id === career?.id && g.semester === sem);
+  const subjects = cache.subjects.filter(s => s.career_id === career?.id && s.semester === sem);
+
+  const pending = [];
+  for (const group of groups) {
+    for (const subject of subjects) {
+      const sessions = working.filter(a => a.group_id === group.id && a.subject_id === subject.id).length;
+      if (sessions < 2) {
+        pending.push({ group, subject, sessions });
+      }
+    }
+  }
+
+  if (!pending.length) {
+    container.innerHTML = `
+      <div class="pending-header">Materias pendientes</div>
+      <p class="pending-empty">✓ Todas las materias de este semestre están asignadas.</p>`;
+    return;
+  }
+
+  const tags = pending.map(({ group, subject, sessions }) => {
+    const remaining = 2 - sessions;
+    const cls = sessions === 1 ? 'pending-tag half' : 'pending-tag';
+    return `
+      <span class="${cls}" title="Grupo ${group.group_number} · ${remaining} sesión${remaining > 1 ? 'es' : ''} pendiente${remaining > 1 ? 's' : ''}">
+        ${escapeHtml(subject.name)}
+        ${groups.length > 1 ? `<em>G${group.group_number}</em>` : ''}
+        <span class="pending-sessions">${sessions}/2</span>
+      </span>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="pending-header">
+      Materias pendientes
+      <span class="pending-count">${pending.length}</span>
+    </div>
+    <div class="pending-tags">${tags}</div>`;
+}
+
+// ── Grid events ──────────────────────────────────────────────────────
 function attachGridEvents(container) {
   let draggingAid = null;
 
@@ -162,11 +204,7 @@ function attachGridEvents(container) {
       if (e.target.closest('[data-aid]')) return;
       openAddModal(cell.dataset.day, cell.dataset.start, cell.dataset.end);
     });
-
-    cell.addEventListener('dragover', e => {
-      e.preventDefault();
-      cell.classList.add('drag-over');
-    });
+    cell.addEventListener('dragover', e => { e.preventDefault(); cell.classList.add('drag-over'); });
     cell.addEventListener('dragleave', () => cell.classList.remove('drag-over'));
     cell.addEventListener('drop', e => {
       e.preventDefault();
@@ -178,8 +216,7 @@ function attachGridEvents(container) {
         a.start_time = cell.dataset.start;
         a.end_time   = cell.dataset.end;
         recomputeViolations();
-        renderGrid();
-        updateSaveBtn();
+        renderAll();
       }
       draggingAid = null;
     });
@@ -207,8 +244,7 @@ function openBlockMenu(aid, blockEl) {
   menu.querySelector('[data-action="delete"]').addEventListener('click', () => {
     working = working.filter(x => x._id !== aid);
     recomputeViolations();
-    renderGrid();
-    updateSaveBtn();
+    renderAll();
     menu.remove();
   });
 
@@ -249,7 +285,6 @@ async function openAddModal(day, startTime, endTime) {
     const groups   = cache.groups.filter(g => g.career_id === career.id && g.semester === sem);
     const subjects = cache.subjects.filter(s => s.career_id === career.id && s.semester === sem);
 
-    // Build pending list: subject-group combos with < 2 sessions
     const pending = [];
     for (const group of groups) {
       for (const subject of subjects) {
@@ -258,18 +293,17 @@ async function openAddModal(day, startTime, endTime) {
       }
     }
 
-    const loaderEl  = modal.querySelector('#aml-loader');
-    const fieldsEl  = modal.querySelector('#aml-fields');
-    const footerEl  = modal.querySelector('#aml-footer');
+    const loaderEl = modal.querySelector('#aml-loader');
+    const fieldsEl = modal.querySelector('#aml-fields');
+    const footerEl = modal.querySelector('#aml-footer');
 
     if (!pending.length) {
-      loaderEl.innerHTML = '<p>No hay materias pendientes para este semestre y carrera.</p>';
+      loaderEl.innerHTML = '<p>No hay materias pendientes para este semestre.</p>';
       footerEl.hidden = false;
       modal.querySelector('#aml-confirm').hidden = true;
       return;
     }
 
-    // Professors available at this day/time
     const availProfs = cache.professors.filter(p =>
       p.availability?.some(av =>
         av.day === day &&
@@ -278,7 +312,6 @@ async function openAddModal(day, startTime, endTime) {
       )
     );
 
-    // Rooms not occupied at this slot (within working proposal)
     const occupiedRooms = new Set(
       working.filter(a => a.day === day && a.start_time === startTime).map(a => a.room_id)
     );
@@ -313,10 +346,10 @@ async function openAddModal(day, startTime, endTime) {
     fieldsEl.hidden = false;
     footerEl.hidden = false;
 
-    const sgSel      = fieldsEl.querySelector('#aml-sg');
-    const profSel    = fieldsEl.querySelector('#aml-prof');
-    const roomSel    = fieldsEl.querySelector('#aml-room');
-    const noticeEl   = fieldsEl.querySelector('#aml-notice');
+    const sgSel    = fieldsEl.querySelector('#aml-sg');
+    const profSel  = fieldsEl.querySelector('#aml-prof');
+    const roomSel  = fieldsEl.querySelector('#aml-room');
+    const noticeEl = fieldsEl.querySelector('#aml-notice');
 
     function refreshDropdowns() {
       const parts     = sgSel.value.split('|');
@@ -329,27 +362,20 @@ async function openAddModal(day, startTime, endTime) {
 
       if (!subjectId) return;
 
-      // Professors who teach this subject and are free at this slot
       const eligible = availProfs.filter(p => p.subject_ids.includes(subjectId));
       if (eligible.length) {
-        eligible.forEach(p => {
-          profSel.innerHTML += `<option value="${p.id}">${escapeHtml(p.name)}</option>`;
-        });
+        eligible.forEach(p => { profSel.innerHTML += `<option value="${p.id}">${escapeHtml(p.name)}</option>`; });
       } else {
         profSel.innerHTML = '<option value="">Sin profesores disponibles</option>';
       }
 
-      // Rooms of the right type that are free
       const typeRooms = freeRooms.filter(r => needsLab ? r.type === 'lab' : r.type === 'theory');
       if (typeRooms.length) {
-        typeRooms.forEach(r => {
-          roomSel.innerHTML += `<option value="${r.id}">${escapeHtml(r.name)} (cap. ${r.capacity})</option>`;
-        });
+        typeRooms.forEach(r => { roomSel.innerHTML += `<option value="${r.id}">${escapeHtml(r.name)} (cap. ${r.capacity})</option>`; });
       } else {
         roomSel.innerHTML = `<option value="">${needsLab ? 'Sin laboratorios disponibles' : 'Sin aulas disponibles'}</option>`;
       }
 
-      // Session notice
       const groupId  = Number(parts[0]);
       const sessions = working.filter(a => a.group_id === groupId && a.subject_id === subjectId).length;
       if (sessions === 0) {
@@ -370,7 +396,7 @@ async function openAddModal(day, startTime, endTime) {
       const roomId    = Number(roomSel.value);
 
       if (!groupId || !subjectId || !roomId) {
-        if (!roomSel.value) roomSel.style.outline = '2px solid var(--color-danger)';
+        roomSel.style.outline = '2px solid var(--color-danger)';
         return;
       }
 
@@ -379,7 +405,7 @@ async function openAddModal(day, startTime, endTime) {
       const room    = cache.rooms.find(r => r.id === roomId);
       const prof    = profSel.value ? cache.professors.find(p => p.id === Number(profSel.value)) : null;
 
-      const entry = {
+      working.push({
         _id:           crypto.randomUUID(),
         group_id:      group.id,
         subject_id:    subject.id,
@@ -395,43 +421,40 @@ async function openAddModal(day, startTime, endTime) {
         start_time:    startTime,
         end_time:      endTime,
         violations:    [],
-      };
+      });
 
-      working.push(entry);
       recomputeViolations();
-      renderGrid();
-      updateSaveBtn();
+      renderAll();
       close();
     });
 
   } catch (err) {
     modal.querySelector('#aml-loader').innerHTML =
-      `<p style="color:var(--color-danger)">Error al cargar datos: ${escapeHtml(err.message)}</p>`;
+      `<p style="color:var(--color-danger)">Error: ${escapeHtml(err.message)}</p>`;
     modal.querySelector('#aml-footer').hidden = false;
     modal.querySelector('#aml-confirm').hidden = true;
   }
 }
 
-// ── Navigation render ────────────────────────────────────────────────
+// ── Nav + save button ────────────────────────────────────────────────
 function renderNav() {
   const career = currentCareer();
   document.getElementById('career-label').textContent = career?.name ?? '—';
   document.getElementById('sem-label').textContent    = `Semestre ${navState.semester}`;
-  updateSaveBtn();
+
+  const violations = working.reduce((n, a) => n + (a.violations?.length ?? 0), 0);
+  const btn = document.getElementById('btn-save-proposal');
+  if (btn) {
+    btn.textContent = violations > 0
+      ? `Guardar propuesta (⚠ ${violations} advertencia${violations > 1 ? 's' : ''})`
+      : 'Guardar propuesta';
+  }
 }
 
 function renderAll() {
   renderNav();
   renderGrid();
-}
-
-function updateSaveBtn() {
-  const violations = working.reduce((n, a) => n + (a.violations?.length ?? 0), 0);
-  const btn = document.getElementById('btn-save-proposal');
-  if (!btn || readOnly) return;
-  btn.textContent = violations > 0
-    ? `Guardar propuesta (⚠ ${violations} advertencia${violations > 1 ? 's' : ''})`
-    : 'Guardar propuesta';
+  renderPending();
 }
 
 // ── Save proposal ────────────────────────────────────────────────────
@@ -442,7 +465,6 @@ function saveProposal() {
   }
 
   const violations = working.reduce((n, a) => n + (a.violations?.length ?? 0), 0);
-
   const coverageMap = {};
   for (const a of working) {
     (coverageMap[a.career_id] ??= new Set()).add(a.semester);
@@ -473,38 +495,6 @@ function saveProposal() {
   setTimeout(() => { notice.hidden = true; }, 3000);
 }
 
-// ── Read-only mode (view a saved proposal) ───────────────────────────
-export function loadProposalReadOnly(pid) {
-  const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]');
-  const proposal = stored.find(p => p.id === pid);
-  if (!proposal) return;
-
-  readOnly         = true;
-  readOnlyProposal = proposal;
-
-  // Set nav to first career/semester that appears in the proposal
-  if (proposal.assignments.length) {
-    const first = proposal.assignments[0];
-    const idx   = cache.careers.findIndex(c => c.id === first.career_id);
-    if (idx >= 0) navState.careerIdx = idx;
-    navState.semester = first.semester;
-  }
-
-  document.getElementById('readonly-banner').hidden = false;
-  document.getElementById('btn-save-proposal').hidden = true;
-  document.querySelector('.schedule-nav')?.classList.add('readonly');
-  renderAll();
-}
-
-function exitReadOnly() {
-  readOnly         = false;
-  readOnlyProposal = null;
-  document.getElementById('readonly-banner').hidden = true;
-  document.getElementById('btn-save-proposal').hidden = false;
-  document.querySelector('.schedule-nav')?.classList.remove('readonly');
-  renderAll();
-}
-
 // ── Keyboard navigation ──────────────────────────────────────────────
 function setupKeyboard() {
   document.addEventListener('keydown', e => {
@@ -513,8 +503,7 @@ function setupKeyboard() {
     if (document.querySelector('.modal-overlay')) return;
     if (!cache?.careers?.length) return;
 
-    const career = currentCareer();
-    const maxSem = career?.total_semesters ?? 1;
+    const maxSem = currentCareer()?.total_semesters ?? 1;
     const n      = cache.careers.length;
 
     if (e.key === 'ArrowRight') {
@@ -543,7 +532,6 @@ function setupKeyboard() {
 export async function initSchedulePage({ onProposalsTab } = {}) {
   profile = await getProfile();
 
-  // Tabs
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -554,7 +542,6 @@ export async function initSchedulePage({ onProposalsTab } = {}) {
     });
   });
 
-  // Nav buttons
   document.getElementById('career-prev')?.addEventListener('click', () => {
     const n = cache.careers.length;
     navState.careerIdx = ((navState.careerIdx - 1) % n + n) % n;
@@ -578,12 +565,7 @@ export async function initSchedulePage({ onProposalsTab } = {}) {
   });
 
   document.getElementById('btn-save-proposal')?.addEventListener('click', saveProposal);
-  document.getElementById('btn-exit-readonly')?.addEventListener('click', exitReadOnly);
 
-  document.addEventListener('schedule:view-proposal', e => loadProposalReadOnly(e.detail.pid));
-
-  // Load data + render
-  document.getElementById('schedule-grid').innerHTML = '<p style="color:var(--color-muted)">Cargando datos…</p>';
   await ensureCache();
   setupKeyboard();
   renderAll();
