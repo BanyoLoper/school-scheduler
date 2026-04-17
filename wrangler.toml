@@ -6,7 +6,7 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding      = "DB"
 database_name = "school-schedule-db"
-database_id  = "YOUR_DATABASE_ID_HERE"
+database_id  = "9a07c866-f469-46a3-916b-3867ab552705"
 
 [vars]
 ALLOWED_ORIGIN = "https://school-schedule.pages.dev"
